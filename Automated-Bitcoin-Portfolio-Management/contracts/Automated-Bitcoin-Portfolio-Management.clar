@@ -73,3 +73,23 @@
     percentage-change: int
   }
 )
+
+;; Public functions
+
+;; Initialize or update a user's portfolio
+(define-public (initialize-portfolio (risk-level uint))
+  (begin
+    (asserts! (or (is-eq risk-level risk-conservative) 
+                (is-eq risk-level risk-moderate) 
+                (is-eq risk-level risk-aggressive)) 
+            err-invalid-risk-level)
+    (map-set user-portfolios 
+      { user: tx-sender }
+      {
+        risk-level: risk-level,
+        total-btc-value: u0,
+        last-rebalance-block: stacks-block-height,
+        custom-allocations: false,
+        active: true
+      })
+    (ok true)))
