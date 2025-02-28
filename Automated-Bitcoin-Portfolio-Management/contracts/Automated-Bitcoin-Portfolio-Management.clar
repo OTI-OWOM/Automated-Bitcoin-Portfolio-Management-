@@ -40,3 +40,9 @@
     last-yield-claim-block: uint
   }
 )
+
+;; Keep track of portfolio composition/allocations by risk level
+(define-map risk-allocations
+  { risk-level: uint, asset-id: uint }
+  { target-percentage: uint }
+)
