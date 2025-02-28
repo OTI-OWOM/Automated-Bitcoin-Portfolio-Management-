@@ -26,3 +26,17 @@
 (define-data-var max-slippage-percentage uint u2) ;; Default 2%
 (define-data-var minimum-rebalance-threshold uint u5) ;; Only rebalance if drift > 5%
 (define-data-var performance-fee-percentage uint u2) ;; 2% fee on profits
+
+;; Keep track of all registered assets
+(define-map assets 
+  { asset-id: uint } 
+  { 
+    name: (string-ascii 32),
+    token-contract: principal,
+    token-id: (optional uint),
+    is-yield-bearing: bool,
+    yield-source: (optional principal),
+    current-yield-percentage: uint,
+    last-yield-claim-block: uint
+  }
+)
