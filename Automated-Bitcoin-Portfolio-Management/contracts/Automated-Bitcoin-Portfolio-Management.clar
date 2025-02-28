@@ -169,3 +169,203 @@
         { amount: (+ (get amount user-balance) yield-amount) })
       
       (ok yield-amount))))
+
+;; Get a user's portfolio composition
+(define-read-only (get-portfolio-composition (user principal))
+  (let (
+    (portfolio (map-get? user-portfolios { user: user }))
+  )
+    (if (is-some portfolio)
+      (ok (some portfolio))
+      (err err-invalid-risk-level))))
+
+;; Get current asset allocation for user
+(define-read-only (get-current-allocation (user principal))
+  (ok (map-get? user-portfolios { user: user })))
+
+;; Helper to set individual allocation
+(define-private (set-allocation (allocation {asset-id: uint, percentage: uint}))
+  (let (
+    (asset-id (get asset-id allocation))
+    (percentage (get percentage allocation))
+    (portfolio (unwrap-panic (map-get? user-portfolios { user: tx-sender })))
+    (risk-level (get risk-level portfolio))
+  )
+    (map-set risk-allocations
+      { risk-level: risk-level, asset-id: asset-id }
+      { target-percentage: percentage })
+    true))
+
+;; Calculate current portfolio drift compared to target allocation
+(define-private (calculate-portfolio-drift (user principal))
+  (let (
+    (portfolio (unwrap-panic (map-get? user-portfolios { user: user })))
+    (risk-level (get risk-level portfolio))
+
+  )
+    u10)) ;; 10% drift from targets
+
+;; Check if a portfolio is active
+(define-private (active-portfolio (user principal))
+  (let (
+    (portfolio (map-get? user-portfolios { user: user }))
+  )
+    (if (is-some portfolio)
+      (get active (unwrap-panic portfolio))
+      false)))
+
+;; Record portfolio performance for historical tracking
+(define-private (record-performance (user principal))
+  (let (
+    (portfolio (unwrap-panic (map-get? user-portfolios { user: user })))
+    (current-value (get total-btc-value portfolio))
+    ;; In a real implementation, you'd calculate actual performance metrics
+    (percentage-change 10) ;; Placeholder for 10% increase
+  )
+    (map-set portfolio-performance
+      { user: user, timestamp: stacks-block-height }
+      { 
+        btc-value: current-value,
+        percentage-change: percentage-change
+      })
+    (ok true)))
+
+
+
+;; Admin functions
+
+;; Register a new asset that can be managed in portfolios
+(define-public (register-asset (asset-id uint) 
+                             (name (string-ascii 32)) 
+                             (token-contract principal)
+                             (token-id (optional uint))
+                             (is-yield-bearing bool)
+                             (yield-source (optional principal))
+                             (initial-yield-percentage uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (not (is-some (map-get? assets { asset-id: asset-id }))) err-asset-exists)
+    
+    (map-set assets
+      { asset-id: asset-id }
+      {
+        name: name,
+        token-contract: token-contract,
+        token-id: token-id,
+        is-yield-bearing: is-yield-bearing,
+        yield-source: yield-source,
+        current-yield-percentage: initial-yield-percentage,
+        last-yield-claim-block: stacks-block-height
+      })
+    
+    (ok true)))
+
+;; Update risk allocation for a specific asset
+(define-public (set-risk-allocation (risk-level uint) (asset-id uint) (percentage uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (or (is-eq risk-level risk-conservative) 
+                (is-eq risk-level risk-moderate) 
+                (is-eq risk-level risk-aggressive)) 
+            err-invalid-risk-level)
+    (asserts! (is-some (map-get? assets { asset-id: asset-id })) err-asset-not-exists)
+    (asserts! (and (>= percentage u0) (<= percentage u100)) err-invalid-threshold)
+    
+    (map-set risk-allocations
+      { risk-level: risk-level, asset-id: asset-id }
+      { target-percentage: percentage })
+    
+    (ok true)))
+
+;; Update the rebalance frequency (in blocks)
+(define-public (set-rebalance-frequency (blocks uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (> blocks u0) err-invalid-threshold)
+    (var-set rebalance-frequency blocks)
+    (ok true)))
+
+;; Update the minimum rebalance threshold
+(define-public (set-minimum-rebalance-threshold (percentage uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (and (> percentage u0) (< percentage u100)) err-invalid-threshold)
+    (var-set minimum-rebalance-threshold percentage)
+    (ok true)))
+
+;; Update maximum allowed slippage
+(define-public (set-max-slippage (percentage uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (and (>= percentage u0) (< percentage u50)) err-invalid-threshold)
+    (var-set max-slippage-percentage percentage)
+    (ok true)))
+
+;; Set the performance fee percentage
+(define-public (set-performance-fee (percentage uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (and (>= percentage u0) (< percentage u30)) err-invalid-threshold)
+    (var-set performance-fee-percentage percentage)
+    (ok true)))
+
+;; Run a simulation of different allocation strategies
+(define-public (simulate-strategy (risk-level uint) (scenario uint))
+  (begin
+    (asserts! (or (is-eq risk-level risk-conservative) 
+                (is-eq risk-level risk-moderate) 
+                (is-eq risk-level risk-aggressive)) 
+            err-invalid-risk-level)
+    
+    ;; Placeholder for simulation logic
+    ;; In a real implementation, this would run different scenarios and
+    ;; return projected performance metrics
+    
+    (ok u10) ;; Placeholder return for 10% projected growth
+  ))
+
+  ;; Get a simulation result
+(define-read-only (get-simulation-result (simulation-id uint))
+  ;; Placeholder for retrieving simulation results
+  (ok {
+    projected-growth: u10,
+    max-drawdown: u5,
+    sharpe-ratio: u200,
+    risk-level: risk-moderate
+  }))
+
+;; DCA configuration for users
+(define-map dca-configurations
+  { user: principal }
+  {
+    active: bool,
+    frequency-blocks: uint,
+    amount-per-period: uint,
+    target-asset-id: uint,
+    last-execution-block: uint,
+    source-asset-id: uint
+  }
+)
+
+;; ==================== NEW FEATURE: PORTFOLIO MANAGER DELEGATION ====================
+;; Allow users to delegate portfolio management
+(define-map delegated-managers
+  { user: principal, manager: principal }
+  {
+    active: bool,
+    expiration-height: uint,
+    fee-percentage: uint,
+    can-withdraw: bool
+  }
+)
+
+;; Manager performance tracking
+(define-map manager-performance
+  { manager: principal }
+  {
+    total-users: uint,
+    average-return: int,
+    assets-under-management: uint
+  }
+)
+
