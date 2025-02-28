@@ -433,3 +433,36 @@
       })
     
     (ok true)))
+
+;; Delegate portfolio management to another user
+(define-public (delegate-management (manager principal) (expiration-blocks uint) (fee-percentage uint) (can-withdraw bool))
+  (begin
+    (asserts! (not (is-eq tx-sender manager)) (err u124))
+    (asserts! (< fee-percentage u30) err-invalid-threshold)
+    
+    (map-set delegated-managers
+      { user: tx-sender, manager: manager }
+      {
+        active: true,
+        expiration-height: (+ stacks-block-height expiration-blocks),
+        fee-percentage: fee-percentage,
+        can-withdraw: can-withdraw
+      })
+    
+    ;; Update manager's stats
+    (let (
+      (manager-stats (default-to 
+                      { total-users: u0, average-return: 0, assets-under-management: u0 }
+                      (map-get? manager-performance { manager: manager })))
+      (portfolio (unwrap! (map-get? user-portfolios { user: tx-sender }) err-invalid-risk-level))
+    )
+      (map-set manager-performance
+        { manager: manager }
+        { 
+          total-users: (+ (get total-users manager-stats) u1),
+          average-return: (get average-return manager-stats),
+          assets-under-management: (+ (get assets-under-management manager-stats) (get total-btc-value portfolio))
+        })
+    )
+    
+    (ok true)))
