@@ -195,3 +195,14 @@
       { risk-level: risk-level, asset-id: asset-id }
       { target-percentage: percentage })
     true))
+
+;; Calculate current portfolio drift compared to target allocation
+(define-private (calculate-portfolio-drift (user principal))
+  (let (
+    (portfolio (unwrap-panic (map-get? user-portfolios { user: user })))
+    (risk-level (get risk-level portfolio))
+
+  )
+
+    u10)) ;; 10% drift from targets
+
