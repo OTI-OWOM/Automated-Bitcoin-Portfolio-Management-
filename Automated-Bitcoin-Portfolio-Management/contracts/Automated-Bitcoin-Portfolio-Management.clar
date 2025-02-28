@@ -386,6 +386,7 @@
   }
 )
 
+
 ;; Follow other users' strategies
 (define-map strategy-followers
   { follower: principal, leader: principal }
@@ -395,3 +396,40 @@
     allocation-percentage: uint
   }
 )
+
+;; Platform user limits
+(define-data-var max-users uint u1000)
+(define-data-var current-users uint u0)
+
+;; Stop loss and take profit settings
+(define-map risk-controls
+  { user: principal }
+  {
+    stop-loss-percentage: uint,
+    take-profit-percentage: uint,
+    stop-loss-active: bool,
+    take-profit-active: bool
+  }
+)
+
+;; Set up dollar-cost averaging
+(define-public (configure-dca (frequency-blocks uint) (amount uint) (target-asset-id uint) (source-asset-id uint))
+  (begin
+    (asserts! (> frequency-blocks u0) err-invalid-threshold)
+    (asserts! (> amount u0) err-invalid-amount)
+    (asserts! (is-some (map-get? assets { asset-id: target-asset-id })) err-asset-not-exists)
+    (asserts! (is-some (map-get? assets { asset-id: source-asset-id })) err-asset-not-exists)
+    
+    
+    (map-set dca-configurations
+      { user: tx-sender }
+      {
+        active: true,
+        frequency-blocks: frequency-blocks,
+        amount-per-period: amount,
+        target-asset-id: target-asset-id,
+        last-execution-block: stacks-block-height,
+        source-asset-id: source-asset-id
+      })
+    
+    (ok true)))
