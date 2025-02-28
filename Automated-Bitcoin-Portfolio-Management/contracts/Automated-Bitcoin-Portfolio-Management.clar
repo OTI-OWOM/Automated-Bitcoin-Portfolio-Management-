@@ -142,3 +142,30 @@
       (merge portfolio { total-btc-value: (- (get total-btc-value portfolio) amount) }))
     
     (ok true)))
+
+;; Claim yield from yield-bearing assets
+(define-public (claim-yield (asset-id uint))
+  (let (
+    (asset-info (unwrap! (map-get? assets { asset-id: asset-id }) err-asset-not-exists))
+    (user-balance (unwrap! (map-get? user-asset-balances { user: tx-sender, asset-id: asset-id }) err-insufficient-balance))
+  )
+    (asserts! (get is-yield-bearing asset-info) (err u113))
+    (asserts! (is-some (get yield-source asset-info)) (err u114))
+    
+    
+    (let (
+      (blocks-since-last-claim (- stacks-block-height (get last-yield-claim-block asset-info)))
+      (yield-rate (get current-yield-percentage asset-info))
+      (yield-amount (/ (* (get amount user-balance) yield-rate blocks-since-last-claim) u10000))
+    )
+      ;; Update asset info with new claim block
+      (map-set assets
+        { asset-id: asset-id }
+        (merge asset-info { last-yield-claim-block: stacks-block-height }))
+      
+      ;; Update user balance with yield
+      (map-set user-asset-balances
+        { user: tx-sender, asset-id: asset-id }
+        { amount: (+ (get amount user-balance) yield-amount) })
+      
+      (ok yield-amount))))
