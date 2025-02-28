@@ -487,3 +487,21 @@
   )
     ;; Placeholder for copying allocations
     (ok true)))
+
+;; Rebalance all followers of a leader
+(define-private (rebalance-followers (leader principal))
+  (begin
+    ;; In a real implementation, you would:
+    ;; 1. Query all followers of this leader
+    ;; 2. For each follower with auto-rebalance=true, update their allocations
+    
+    ;; Placeholder for rebalancing followers
+    (ok true)))
+
+;; Enable emergency mode (admin only)
+(define-public (enable-emergency-mode)
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (var-set emergency-mode true)
+    (ok true)))
+
