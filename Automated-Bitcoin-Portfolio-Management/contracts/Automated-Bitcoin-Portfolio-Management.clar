@@ -333,3 +333,39 @@
     sharpe-ratio: u200,
     risk-level: risk-moderate
   }))
+
+;; DCA configuration for users
+(define-map dca-configurations
+  { user: principal }
+  {
+    active: bool,
+    frequency-blocks: uint,
+    amount-per-period: uint,
+    target-asset-id: uint,
+    last-execution-block: uint,
+    source-asset-id: uint
+  }
+)
+
+;; ==================== NEW FEATURE: PORTFOLIO MANAGER DELEGATION ====================
+;; Allow users to delegate portfolio management
+(define-map delegated-managers
+  { user: principal, manager: principal }
+  {
+    active: bool,
+    expiration-height: uint,
+    fee-percentage: uint,
+    can-withdraw: bool
+  }
+)
+
+;; Manager performance tracking
+(define-map manager-performance
+  { manager: principal }
+  {
+    total-users: uint,
+    average-return: int,
+    assets-under-management: uint
+  }
+)
+
