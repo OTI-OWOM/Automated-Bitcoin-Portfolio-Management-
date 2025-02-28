@@ -276,3 +276,19 @@
       { target-percentage: percentage })
     
     (ok true)))
+
+;; Update the rebalance frequency (in blocks)
+(define-public (set-rebalance-frequency (blocks uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (> blocks u0) err-invalid-threshold)
+    (var-set rebalance-frequency blocks)
+    (ok true)))
+
+;; Update the minimum rebalance threshold
+(define-public (set-minimum-rebalance-threshold (percentage uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (and (> percentage u0) (< percentage u100)) err-invalid-threshold)
+    (var-set minimum-rebalance-threshold percentage)
+    (ok true)))
