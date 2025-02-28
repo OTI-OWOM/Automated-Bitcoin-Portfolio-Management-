@@ -169,3 +169,12 @@
         { amount: (+ (get amount user-balance) yield-amount) })
       
       (ok yield-amount))))
+
+;; Get a user's portfolio composition
+(define-read-only (get-portfolio-composition (user principal))
+  (let (
+    (portfolio (map-get? user-portfolios { user: user }))
+  )
+    (if (is-some portfolio)
+      (ok (some portfolio))
+      (err err-invalid-risk-level))))
