@@ -1,30 +1,13 @@
-
-;; title: Automated-Bitcoin-Portfolio-Management
-;; version:
-;; summary:
-;; description:
-
-;; traits
-;;
-
-;; token definitions
-;;
-
-;; constants
-;;
-
-;; data vars
-;;
-
-;; data maps
-;;
-
-;; public functions
-;;
-
-;; read only functions
-;;
-
-;; private functions
-;;
-
+;; Define constants
+(define-constant contract-owner tx-sender)
+(define-constant err-owner-only (err u100))
+(define-constant err-invalid-asset-id (err u101))
+(define-constant err-invalid-amount (err u102))
+(define-constant err-insufficient-balance (err u103))
+(define-constant err-asset-exists (err u104))
+(define-constant err-asset-not-exists (err u105))
+(define-constant err-invalid-threshold (err u106))
+(define-constant err-invalid-allocation (err u107))
+(define-constant err-invalid-risk-level (err u108))
+(define-constant err-rebalance-in-progress (err u109))
+(define-constant err-no-liquidity (err u110))
