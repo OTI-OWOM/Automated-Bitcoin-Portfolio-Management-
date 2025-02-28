@@ -178,3 +178,20 @@
     (if (is-some portfolio)
       (ok (some portfolio))
       (err err-invalid-risk-level))))
+
+;; Get current asset allocation for user
+(define-read-only (get-current-allocation (user principal))
+  (ok (map-get? user-portfolios { user: user })))
+
+;; Helper to set individual allocation
+(define-private (set-allocation (allocation {asset-id: uint, percentage: uint}))
+  (let (
+    (asset-id (get asset-id allocation))
+    (percentage (get percentage allocation))
+    (portfolio (unwrap-panic (map-get? user-portfolios { user: tx-sender })))
+    (risk-level (get risk-level portfolio))
+  )
+    (map-set risk-allocations
+      { risk-level: risk-level, asset-id: asset-id }
+      { target-percentage: percentage })
+    true))
