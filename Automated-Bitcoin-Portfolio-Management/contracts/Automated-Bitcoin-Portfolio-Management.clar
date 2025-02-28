@@ -46,3 +46,30 @@
   { risk-level: uint, asset-id: uint }
   { target-percentage: uint }
 )
+
+;; User portfolios
+(define-map user-portfolios
+  { user: principal }
+  {
+    risk-level: uint,
+    total-btc-value: uint,
+    last-rebalance-block: uint,
+    custom-allocations: bool,
+    active: bool
+  }
+)
+
+;; User asset balances
+(define-map user-asset-balances
+  { user: principal, asset-id: uint }
+  { amount: uint }
+)
+
+;; Historical performance tracking
+(define-map portfolio-performance
+  { user: principal, timestamp: uint }
+  { 
+    btc-value: uint,
+    percentage-change: int
+  }
+)
