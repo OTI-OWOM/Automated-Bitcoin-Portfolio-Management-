@@ -203,6 +203,29 @@
     (risk-level (get risk-level portfolio))
 
   )
-
     u10)) ;; 10% drift from targets
+;; Check if a portfolio is active
+(define-private (active-portfolio (user principal))
+  (let (
+    (portfolio (map-get? user-portfolios { user: user }))
+  )
+    (if (is-some portfolio)
+      (get active (unwrap-panic portfolio))
+      false)))
+
+;; Record portfolio performance for historical tracking
+(define-private (record-performance (user principal))
+  (let (
+    (portfolio (unwrap-panic (map-get? user-portfolios { user: user })))
+    (current-value (get total-btc-value portfolio))
+    ;; In a real implementation, you'd calculate actual performance metrics
+    (percentage-change 10) ;; Placeholder for 10% increase
+  )
+    (map-set portfolio-performance
+      { user: user, timestamp: stacks-block-height }
+      { 
+        btc-value: current-value,
+        percentage-change: percentage-change
+      })
+    (ok true)))
 
