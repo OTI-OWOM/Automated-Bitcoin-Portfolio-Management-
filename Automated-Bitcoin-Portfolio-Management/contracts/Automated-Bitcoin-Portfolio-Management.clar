@@ -308,3 +308,28 @@
     (asserts! (and (>= percentage u0) (< percentage u30)) err-invalid-threshold)
     (var-set performance-fee-percentage percentage)
     (ok true)))
+
+;; Run a simulation of different allocation strategies
+(define-public (simulate-strategy (risk-level uint) (scenario uint))
+  (begin
+    (asserts! (or (is-eq risk-level risk-conservative) 
+                (is-eq risk-level risk-moderate) 
+                (is-eq risk-level risk-aggressive)) 
+            err-invalid-risk-level)
+    
+    ;; Placeholder for simulation logic
+    ;; In a real implementation, this would run different scenarios and
+    ;; return projected performance metrics
+    
+    (ok u10) ;; Placeholder return for 10% projected growth
+  ))
+
+  ;; Get a simulation result
+(define-read-only (get-simulation-result (simulation-id uint))
+  ;; Placeholder for retrieving simulation results
+  (ok {
+    projected-growth: u10,
+    max-drawdown: u5,
+    sharpe-ratio: u200,
+    risk-level: risk-moderate
+  }))
