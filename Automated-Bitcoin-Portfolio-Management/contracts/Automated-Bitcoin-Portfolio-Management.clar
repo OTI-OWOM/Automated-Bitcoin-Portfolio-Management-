@@ -369,3 +369,139 @@
   }
 )
 
+;; Emergency controls
+(define-data-var emergency-mode bool false)
+(define-data-var emergency-admin principal contract-owner)
+
+;; Predefined strategy templates
+(define-map strategy-templates
+  { strategy-id: uint }
+  {
+    name: (string-ascii 32),
+    description: (string-utf8 256),
+    risk-level: uint,
+    allocations: (list 10 {asset-id: uint, percentage: uint}),
+    minimum-investment: uint,
+    rebalance-frequency: uint
+  }
+)
+
+
+;; Follow other users' strategies
+(define-map strategy-followers
+  { follower: principal, leader: principal }
+  {
+    active: bool,
+    auto-rebalance: bool,
+    allocation-percentage: uint
+  }
+)
+
+;; Platform user limits
+(define-data-var max-users uint u1000)
+(define-data-var current-users uint u0)
+
+;; Stop loss and take profit settings
+(define-map risk-controls
+  { user: principal }
+  {
+    stop-loss-percentage: uint,
+    take-profit-percentage: uint,
+    stop-loss-active: bool,
+    take-profit-active: bool
+  }
+)
+
+;; Set up dollar-cost averaging
+(define-public (configure-dca (frequency-blocks uint) (amount uint) (target-asset-id uint) (source-asset-id uint))
+  (begin
+    (asserts! (> frequency-blocks u0) err-invalid-threshold)
+    (asserts! (> amount u0) err-invalid-amount)
+    (asserts! (is-some (map-get? assets { asset-id: target-asset-id })) err-asset-not-exists)
+    (asserts! (is-some (map-get? assets { asset-id: source-asset-id })) err-asset-not-exists)
+    
+    
+    (map-set dca-configurations
+      { user: tx-sender }
+      {
+        active: true,
+        frequency-blocks: frequency-blocks,
+        amount-per-period: amount,
+        target-asset-id: target-asset-id,
+        last-execution-block: stacks-block-height,
+        source-asset-id: source-asset-id
+      })
+    
+    (ok true)))
+
+;; Delegate portfolio management to another user
+(define-public (delegate-management (manager principal) (expiration-blocks uint) (fee-percentage uint) (can-withdraw bool))
+  (begin
+    (asserts! (not (is-eq tx-sender manager)) (err u124))
+    (asserts! (< fee-percentage u30) err-invalid-threshold)
+    
+    (map-set delegated-managers
+      { user: tx-sender, manager: manager }
+      {
+        active: true,
+        expiration-height: (+ stacks-block-height expiration-blocks),
+        fee-percentage: fee-percentage,
+        can-withdraw: can-withdraw
+      })
+    
+    ;; Update manager's stats
+    (let (
+      (manager-stats (default-to 
+                      { total-users: u0, average-return: 0, assets-under-management: u0 }
+                      (map-get? manager-performance { manager: manager })))
+      (portfolio (unwrap! (map-get? user-portfolios { user: tx-sender }) err-invalid-risk-level))
+    )
+      (map-set manager-performance
+        { manager: manager }
+        { 
+          total-users: (+ (get total-users manager-stats) u1),
+          average-return: (get average-return manager-stats),
+          assets-under-management: (+ (get assets-under-management manager-stats) (get total-btc-value portfolio))
+        })
+    )
+    
+    (ok true)))
+
+;; Stop following a strategy
+(define-public (unfollow-strategy (leader principal))
+  (let (
+    (follow-data (unwrap! (map-get? strategy-followers { follower: tx-sender, leader: leader }) (err u126)))
+  )
+    (map-set strategy-followers
+      { follower: tx-sender, leader: leader }
+      (merge follow-data { active: false }))
+    
+    (ok true)))
+
+;; Copy leader's allocations to follower (proportionally to allocation percentage)
+(define-private (copy-leader-allocations (follower principal) (leader principal) (allocation-percentage uint))
+  (let (
+    (leader-portfolio (unwrap! (map-get? user-portfolios { user: leader }) err-invalid-risk-level))
+    (follower-portfolio (unwrap! (map-get? user-portfolios { user: follower }) err-invalid-risk-level))
+    ;; In real implementation, copy the asset allocations proportionally
+  )
+    ;; Placeholder for copying allocations
+    (ok true)))
+
+;; Rebalance all followers of a leader
+(define-private (rebalance-followers (leader principal))
+  (begin
+    ;; In a real implementation, you would:
+    ;; 1. Query all followers of this leader
+    ;; 2. For each follower with auto-rebalance=true, update their allocations
+    
+    ;; Placeholder for rebalancing followers
+    (ok true)))
+
+;; Enable emergency mode (admin only)
+(define-public (enable-emergency-mode)
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (var-set emergency-mode true)
+    (ok true)))
+
