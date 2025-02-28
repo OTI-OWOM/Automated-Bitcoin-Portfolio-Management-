@@ -11,3 +11,9 @@
 (define-constant err-invalid-risk-level (err u108))
 (define-constant err-rebalance-in-progress (err u109))
 (define-constant err-no-liquidity (err u110))
+
+
+;; Define risk levels (conservative, moderate, aggressive)
+(define-constant risk-conservative u1)
+(define-constant risk-moderate u2)
+(define-constant risk-aggressive u3)
