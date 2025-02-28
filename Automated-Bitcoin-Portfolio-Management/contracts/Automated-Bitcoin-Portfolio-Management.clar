@@ -369,3 +369,29 @@
   }
 )
 
+;; Emergency controls
+(define-data-var emergency-mode bool false)
+(define-data-var emergency-admin principal contract-owner)
+
+;; Predefined strategy templates
+(define-map strategy-templates
+  { strategy-id: uint }
+  {
+    name: (string-ascii 32),
+    description: (string-utf8 256),
+    risk-level: uint,
+    allocations: (list 10 {asset-id: uint, percentage: uint}),
+    minimum-investment: uint,
+    rebalance-frequency: uint
+  }
+)
+
+;; Follow other users' strategies
+(define-map strategy-followers
+  { follower: principal, leader: principal }
+  {
+    active: bool,
+    auto-rebalance: bool,
+    allocation-percentage: uint
+  }
+)
