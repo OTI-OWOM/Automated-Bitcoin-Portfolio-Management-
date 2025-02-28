@@ -466,3 +466,24 @@
     )
     
     (ok true)))
+
+;; Stop following a strategy
+(define-public (unfollow-strategy (leader principal))
+  (let (
+    (follow-data (unwrap! (map-get? strategy-followers { follower: tx-sender, leader: leader }) (err u126)))
+  )
+    (map-set strategy-followers
+      { follower: tx-sender, leader: leader }
+      (merge follow-data { active: false }))
+    
+    (ok true)))
+
+;; Copy leader's allocations to follower (proportionally to allocation percentage)
+(define-private (copy-leader-allocations (follower principal) (leader principal) (allocation-percentage uint))
+  (let (
+    (leader-portfolio (unwrap! (map-get? user-portfolios { user: leader }) err-invalid-risk-level))
+    (follower-portfolio (unwrap! (map-get? user-portfolios { user: follower }) err-invalid-risk-level))
+    ;; In real implementation, copy the asset allocations proportionally
+  )
+    ;; Placeholder for copying allocations
+    (ok true)))
