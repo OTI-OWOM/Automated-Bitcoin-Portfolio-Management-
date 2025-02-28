@@ -292,3 +292,19 @@
     (asserts! (and (> percentage u0) (< percentage u100)) err-invalid-threshold)
     (var-set minimum-rebalance-threshold percentage)
     (ok true)))
+
+;; Update maximum allowed slippage
+(define-public (set-max-slippage (percentage uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (and (>= percentage u0) (< percentage u50)) err-invalid-threshold)
+    (var-set max-slippage-percentage percentage)
+    (ok true)))
+
+;; Set the performance fee percentage
+(define-public (set-performance-fee (percentage uint))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (asserts! (and (>= percentage u0) (< percentage u30)) err-invalid-threshold)
+    (var-set performance-fee-percentage percentage)
+    (ok true)))
